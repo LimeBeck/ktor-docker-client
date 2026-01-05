@@ -1,16 +1,19 @@
+import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompile
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 
 plugins {
     alias(libs.plugins.multiplatform)
     alias(libs.plugins.maven.publish)
     alias(libs.plugins.kotlinx.serialization)
-    id("org.openapi.generator") version "7.18.0"
+    alias(libs.plugins.openapi.generator)
 }
 
 val schemaFilePath = "$rootDir/specs/v1.51.yaml"
 
 kotlin {
     linuxX64()
+
+    jvm {}
 
     sourceSets {
         commonMain {
@@ -48,8 +51,8 @@ kotlin {
             }
         }
     }
-
 }
+
 tasks.withType<KotlinCompilationTask<*>>().configureEach {
     dependsOn("openApiGenerate")
 }

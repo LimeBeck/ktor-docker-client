@@ -11,9 +11,9 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.utils.io.*
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.withContext
 
 class DockerClient(
     config: DockerClientConfig = DockerClientConfig()
@@ -27,15 +27,13 @@ class DockerClient(
     private val client = HttpClient(CIO) {
         install(SSE)
         defaultRequest {
-            url("http://localhost/$API_VERSION")
+            url("http://${config.hostname}/$API_VERSION")
             unixSocket("/var/run/docker.sock")
         }
         install(ContentNegotiation) {
             json(json)
         }
     }
-
-    private val scope = config.coroutineScope
 
     suspend fun getContainersList(): Result<List<ContainerSummary>, ErrorResponse> {
         return client.get("/containers/json").parse()
@@ -48,10 +46,10 @@ class DockerClient(
     suspend fun getContainerLogs(
         id: String,
         parameters: ContainerLogsParameters = ContainerLogsParameters()
-    ): Result<Flow<LogLine>, ErrorResponse> = withContext(scope.coroutineContext) {
+    ): Result<Flow<LogLine>, ErrorResponse> = coroutineScope {
         val container = getContainerInfo(id).onError {
-            return@withContext it.asError()
-        }.getOrNull() ?: return@withContext ErrorResponse("Container not found").asError()
+            return@coroutineScope it.asError()
+        }.getOrNull() ?: return@coroutineScope ErrorResponse("Container not found").asError()
 
         val logs = flow {
             client.prepareGet("/containers/${id}/logs") {
@@ -119,7 +117,7 @@ class DockerClient(
             }
         }
 
-        return@withContext logs.asSuccess()
+        return@coroutineScope logs.asSuccess()
     }
 
     suspend fun createContainer(
@@ -127,6 +125,7 @@ class DockerClient(
         config: ContainerConfig = ContainerConfig()
     ): Result<ContainerCreateResponse, ErrorResponse> {
         return client.post("/containers/create") {
+            name?.let { parameter("name", it) }
             contentType(ContentType.Application.Json)
             setBody(config)
         }.parse()
@@ -134,6 +133,26 @@ class DockerClient(
 
     suspend fun startContainer(id: String): Result<Unit, ErrorResponse> {
         return client.post("/containers/$id/start").validateOnly()
+    }
+
+    suspend fun stopContainer(id: String, signal: String? = null, t: Int? = null): Result<Unit, ErrorResponse> {
+        return client.post("/containers/$id/stop") {
+            signal?.let { parameter("signal", signal) }
+            t?.let { parameter("t", t.toString()) }
+        }.validateOnly()
+    }
+
+    suspend fun removeContainer(
+        id: String,
+        force: Boolean = false,
+        link: Boolean = false,
+        v: Boolean = false
+    ): Result<Unit, ErrorResponse> {
+        return client.delete("/containers/$id") {
+            parameter("force", force.toString())
+            parameter("link", link.toString())
+            parameter("v", v.toString())
+        }.validateOnly()
     }
 
     private suspend inline fun <reified T> HttpResponse.parse(): Result<T, ErrorResponse> {
@@ -152,5 +171,3 @@ class DockerClient(
         }
     }
 }
-
-

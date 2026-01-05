@@ -8,5 +8,6 @@ data class DockerClientConfig(
     val json: Json = Json {
         ignoreUnknownKeys = true
     },
-    val coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob())
+    val coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob()),
+    val hostname: String = "localhost"
 )

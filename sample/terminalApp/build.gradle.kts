@@ -12,11 +12,20 @@ kotlin {
         }
     }
 
+    jvm {
+        mainRun {
+            mainClass = "MainKt"
+        }
+    }
+
+
     sourceSets {
         commonMain.dependencies {
             implementation(project(":shared"))
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.cio)
+            implementation(libs.arrow.core)
+            implementation(libs.arrow.suspendapp)
         }
     }
 }
