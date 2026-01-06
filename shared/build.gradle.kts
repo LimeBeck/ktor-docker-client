@@ -13,6 +13,10 @@ val schemaFilePath = "$rootDir/specs/v1.51.yaml"
 kotlin {
     linuxX64()
 
+    js {
+        nodejs()
+    }
+
     jvm {}
 
     sourceSets {

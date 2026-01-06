@@ -14,6 +14,7 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+import io.ktor.utils.io.InternalAPI
 
 open class DockerClient(
     val config: DockerClientConfig = DockerClientConfig()
@@ -57,10 +58,11 @@ open class DockerClient(
         }
     }
 
+    @OptIn(InternalAPI::class)
     fun HttpRequestBuilder.applyConnectionConfig() {
         when (config.connectionConfig) {
             is DockerClientConfig.ConnectionConfig.SocketConnection -> {
-                unixSocket(config.connectionConfig.socketPath)
+                setCapability(UnixSocketCapability, UnixSocketSettings(config.connectionConfig.socketPath))
             }
         }
     }

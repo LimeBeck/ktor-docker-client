@@ -12,6 +12,12 @@ kotlin {
         }
     }
 
+    js {
+        nodejs {
+            binaries.executable()
+        }
+    }
+
     jvm {
         mainRun {
             mainClass = "MainKt"
