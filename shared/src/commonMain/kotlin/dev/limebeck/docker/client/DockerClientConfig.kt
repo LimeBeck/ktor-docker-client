@@ -8,6 +8,9 @@ data class DockerClientConfig(
     val json: Json = Json {
         ignoreUnknownKeys = true
     },
-    val coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob()),
-    val hostname: String = "localhost"
-)
+    val connectionConfig: ConnectionConfig = ConnectionConfig.SocketConnection("/var/run/docker.sock")
+) {
+    sealed interface ConnectionConfig {
+        data class SocketConnection(val socketPath: String) : ConnectionConfig
+    }
+}

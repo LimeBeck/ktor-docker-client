@@ -3,6 +3,7 @@ package dev.limebeck.docker.client.api
 import dev.limebeck.docker.client.DockerClient
 import dev.limebeck.docker.client.dslUtils.ApiCacheHolder
 import dev.limebeck.docker.client.model.*
+import dev.limebeck.docker.client.dslUtils.readLogLines
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -10,7 +11,6 @@ import io.ktor.http.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 
 private object ContainersKey
@@ -35,12 +35,11 @@ class DockerContainersApi(val dockerClient: DockerClient) {
     ): Result<Flow<LogLine>, ErrorResponse> = with(dockerClient) {
         coroutineScope {
             val container = getInfo(id).onError {
-                return@coroutineScope Result.error(it)
-            }.getOrNull() ?: return@coroutineScope Result.error(ErrorResponse("Container not found"))
+                return@coroutineScope it.asError()
+            }.getOrNull() ?: return@coroutineScope ErrorResponse("Container not found").asError()
 
             val logs = flow {
                 client.prepareGet("/containers/${id}/logs") {
-                    applyConnectionConfig()
 
                     parameter("follow", parameters.follow.toString())
                     parameter("timestamps", parameters.timestamps.toString())
@@ -51,16 +50,17 @@ class DockerContainersApi(val dockerClient: DockerClient) {
                     parameters.since?.let { parameter("since", it) }
                     parameters.tail?.let { parameter("tail", it) }
 
+                    applyConnectionConfig()
                     timeout {
                         requestTimeoutMillis = 100_000
                     }
                 }.execute {
                     val channel = it.bodyAsChannel()
-                    emitAll(channel.readLogLines(container.config?.tty == true))
+                    channel.readLogLines(container.config?.tty == true, this@flow)
                 }
             }
 
-            Result.success(logs)
+            return@coroutineScope logs.asSuccess()
         }
     }
 
@@ -309,10 +309,10 @@ class DockerContainersApi(val dockerClient: DockerClient) {
                     parameter("stderr", stderr.toString())
                 }.execute { response ->
                     val channel = response.bodyAsChannel()
-                    emitAll(channel.readLogLines(container.config?.tty == true))
+                    channel.readLogLines(container.config?.tty == true, this@flow)
                 }
             }
-            Result.success(attachFlow)
+            attachFlow.asSuccess()
         }
     }
 }

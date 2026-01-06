@@ -1,7 +1,10 @@
 package dev.limebeck.docker.client
 
 import dev.limebeck.docker.client.dslUtils.ApiCacheHolder
-import dev.limebeck.docker.client.model.*
+import dev.limebeck.docker.client.model.ErrorResponse
+import dev.limebeck.docker.client.model.Result
+import dev.limebeck.docker.client.model.asError
+import dev.limebeck.docker.client.model.asSuccess
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
@@ -11,9 +14,6 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
-import io.ktor.utils.io.*
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 
 open class DockerClient(
     val config: DockerClientConfig = DockerClientConfig()
@@ -29,8 +29,12 @@ open class DockerClient(
     val client = HttpClient(CIO) {
         install(SSE)
         defaultRequest {
-            url("http://${config.hostname}/$API_VERSION")
-            unixSocket("/var/run/docker.sock")
+            when (config.connectionConfig) {
+                is DockerClientConfig.ConnectionConfig.SocketConnection -> {
+                    url("http://localhost/$API_VERSION")
+                    unixSocket(config.connectionConfig.socketPath)
+                }
+            }
         }
         install(ContentNegotiation) {
             json(json)
@@ -54,50 +58,10 @@ open class DockerClient(
     }
 
     fun HttpRequestBuilder.applyConnectionConfig() {
-        url("http://${config.hostname}/$API_VERSION")
-        unixSocket("/var/run/docker.sock")
-    }
-
-    fun ByteReadChannel.readLogLines(isTty: Boolean): Flow<LogLine> = flow {
-        while (!isClosedForRead) {
-            val message = if (!isTty) {
-                val header = ByteArray(8)
-                try {
-                    readFully(header)
-                } catch (e: Exception) {
-                    break
-                }
-
-                val streamType = header[0].toInt()
-                val payloadSize = (
-                        ((header[4].toInt() and 0xFF) shl 24) or
-                                ((header[5].toInt() and 0xFF) shl 16) or
-                                ((header[6].toInt() and 0xFF) shl 8) or
-                                (header[7].toInt() and 0xFF)
-                        )
-
-                if (payloadSize < 0) break
-
-                val payloadBuffer = ByteArray(payloadSize)
-                readFully(payloadBuffer)
-
-                LogLine(
-                    line = payloadBuffer.decodeToString(),
-                    type = when (streamType) {
-                        0 -> LogLine.Type.STDOUT // stdin is written on stdout
-                        1 -> LogLine.Type.STDOUT
-                        2 -> LogLine.Type.STDERR
-                        else -> LogLine.Type.UNKNOWN
-                    }
-                )
-            } else {
-                LogLine(
-                    line = readUTF8Line() ?: "",
-                    type = LogLine.Type.UNKNOWN
-                )
+        when (config.connectionConfig) {
+            is DockerClientConfig.ConnectionConfig.SocketConnection -> {
+                unixSocket(config.connectionConfig.socketPath)
             }
-
-            emit(message)
         }
     }
 }
