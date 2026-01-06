@@ -1,4 +1,4 @@
-# Ktor Docker Client
+# Kotlin Multiplatform Docker Client Library
 
 A Docker Remote API client library written in Kotlin Multiplatform using Ktor.
 

@@ -1,15 +1,7 @@
-rootProject.name = "ktor-docker-client"
+rootProject.name = "kmp-docker-client"
 
 pluginManagement {
     repositories {
-        google {
-            content { 
-              	includeGroupByRegex("com\\.android.*")
-              	includeGroupByRegex("com\\.google.*")
-              	includeGroupByRegex("androidx.*")
-              	includeGroupByRegex("android.*")
-            }
-        }
         gradlePluginPortal()
         mavenCentral()
     }
@@ -17,17 +9,9 @@ pluginManagement {
 
 dependencyResolutionManagement {
     repositories {
-        google {
-            content { 
-              	includeGroupByRegex("com\\.android.*")
-              	includeGroupByRegex("com\\.google.*")
-              	includeGroupByRegex("androidx.*")
-              	includeGroupByRegex("android.*")
-            }
-        }
         mavenCentral()
     }
 }
+
 include(":shared")
 include(":sample:terminalApp")
-
