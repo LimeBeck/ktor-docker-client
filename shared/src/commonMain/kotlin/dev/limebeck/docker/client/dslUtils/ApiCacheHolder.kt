@@ -1,5 +1,21 @@
 package dev.limebeck.docker.client.dslUtils
 
+import kotlin.reflect.KProperty
+
 interface ApiCacheHolder {
     val apiCache: MutableMap<Any, Any>
 }
+
+class ApiDelegate<T : Any, R : ApiCacheHolder>(val factory: (R) -> T) {
+    operator fun getValue(thisRef: R, property: KProperty<*>): T {
+        return thisRef.apiCache.getOrPut(property.name) {
+            factory(thisRef)
+        } as T
+    }
+}
+
+fun <T : Any, R : ApiCacheHolder> api(factory: (R) -> T) = ApiDelegate(factory)
+
+typealias ApiFactory<T, R> = (R) -> T
+
+fun <T : Any, R : ApiCacheHolder> ApiFactory<T,R>.api() = ApiDelegate(this)

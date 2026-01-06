@@ -1,15 +1,12 @@
 package dev.limebeck.docker.client.api
 
 import dev.limebeck.docker.client.DockerClient
-import dev.limebeck.docker.client.dslUtils.ApiCacheHolder
+import dev.limebeck.docker.client.dslUtils.api
 
 private object ImagesKey
 
-val DockerClient.images
-    get() = (this as ApiCacheHolder).apiCache.getOrPut(ImagesKey) {
-        DockerImagesApi(this)
-    } as DockerImagesApi
+val DockerClient.images by ::Images.api()
 
-class DockerImagesApi(dockerClient: DockerClient) {
+class Images(dockerClient: DockerClient) {
 
 }

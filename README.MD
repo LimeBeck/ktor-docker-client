@@ -93,25 +93,20 @@ logsFlow.collect { logLine ->
 
 ### Extending the API
 
-If you need to use an endpoint that is not yet implemented in the library, you can easily extend it by following the pattern used in the library.
+If you need to use an endpoint that is not yet implemented in the library, you can easily extend it by following the
+pattern used in the library.
 
 For example, to add support for a custom endpoint:
 
 ```kotlin
-private object MyCustomApiKey
+val DockerClient.myCustomApi by ::MyCustom.api()
 
-val DockerClient.myCustomApi: MyCustomApi
-    get() = (this as ApiCacheHolder).apiCache.getOrPut(MyCustomApiKey) {
-        MyCustomApi(this)
-    } as MyCustomApi
-
-class MyCustomApi(val dockerClient: DockerClient) {
+class MyCustom(val dockerClient: DockerClient) {
     suspend fun getCustomInfo(): Result<MyCustomResponse, ErrorResponse> = with(dockerClient) {
         return client.get("/my/custom/endpoint").parse()
     }
 }
 ```
-
 ## Project Structure
 
 - `shared`: The main module containing the Docker client implementation and generated models.

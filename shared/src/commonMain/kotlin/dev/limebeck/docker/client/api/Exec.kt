@@ -1,9 +1,9 @@
 package dev.limebeck.docker.client.api
 
 import dev.limebeck.docker.client.DockerClient
-import dev.limebeck.docker.client.dslUtils.ApiCacheHolder
-import dev.limebeck.docker.client.model.*
+import dev.limebeck.docker.client.dslUtils.api
 import dev.limebeck.docker.client.dslUtils.readLogLines
+import dev.limebeck.docker.client.model.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -11,14 +11,9 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
-private object ExecKey
+val DockerClient.exec by ::Exec.api()
 
-val DockerClient.exec: DockerExecApi
-    get() = (this as ApiCacheHolder).apiCache.getOrPut(ExecKey) {
-        DockerExecApi(this)
-    } as DockerExecApi
-
-class DockerExecApi(val dockerClient: DockerClient) {
+class Exec(val dockerClient: DockerClient) {
     suspend fun startAndForget(
         id: String,
         config: ExecStartConfig = ExecStartConfig()

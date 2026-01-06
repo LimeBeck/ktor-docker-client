@@ -1,9 +1,9 @@
 package dev.limebeck.docker.client.api
 
 import dev.limebeck.docker.client.DockerClient
-import dev.limebeck.docker.client.dslUtils.ApiCacheHolder
-import dev.limebeck.docker.client.model.*
+import dev.limebeck.docker.client.dslUtils.api
 import dev.limebeck.docker.client.dslUtils.readLogLines
+import dev.limebeck.docker.client.model.*
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -13,14 +13,9 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
-private object ContainersKey
+val DockerClient.containers by ::Containers.api()
 
-val DockerClient.containers: DockerContainersApi
-    get() = (this as ApiCacheHolder).apiCache.getOrPut(ContainersKey) {
-        DockerContainersApi(this)
-    } as DockerContainersApi
-
-class DockerContainersApi(val dockerClient: DockerClient) {
+class Containers(val dockerClient: DockerClient) {
     suspend fun getList(): Result<List<ContainerSummary>, ErrorResponse> = with(dockerClient) {
         return client.get("/containers/json").parse()
     }
