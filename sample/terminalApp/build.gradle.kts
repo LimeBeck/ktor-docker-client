@@ -28,7 +28,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(project(":shared"))
+            implementation(project(":lib"))
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.cio)
             implementation(libs.arrow.core)

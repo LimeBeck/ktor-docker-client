@@ -1,34 +1,36 @@
-# Kotlin Multiplatform Docker Client Library
+# KMP Docker Client
+
+[![Kotlin](https://img.shields.io/badge/kotlin-2.3.0-blue.svg?logo=kotlin)](https://kotlinlang.org)
+[![Ktor](https://img.shields.io/badge/ktor-3.3.3-orange.svg?logo=ktor)](https://ktor.io)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 A Docker Remote API client library written in Kotlin Multiplatform using Ktor.
 
-## Features
+## 🚀 Features
 
-- **Kotlin Multiplatform**: Supports JVM and Linux X64.
-- **Ktor Client**: Leverages the power of Ktor for network requests.
+- **Kotlin Multiplatform**: Supports JVM, Linux X64, and NodeJS.
+- **Ktor Client**: Leverages the power of Ktor for network requests, providing flexible engine support.
 - **Type Safety**: Data models are generated from the official Docker OpenAPI specification (v1.51).
-- **Coroutines & Flow**: Asynchronous operations and streaming support (logs, stats) via Kotlin Coroutines and Flow.
-- **Unix Domain Sockets**: Support for connecting via `/var/run/docker.sock`.
+- **Coroutines & Flow**: First-class support for asynchronous operations and streaming (logs, stats) via Kotlin Coroutines and Flow.
+- **Unix Domain Sockets**: Built-in support for connecting via `/var/run/docker.sock`.
 
-## Current Limitations
+## 📦 Supported Platforms
 
-- Currently, supports only Linux (due to Unix socket dependency).
-- Only Unix sockets are supported for now.
+- [x] **JVM**
+- [x] **Linux X64**
+- [x] **NodeJS**
 
-## Supported Platforms
+## 🛠 Installation
 
-- JVM
-- Linux X64
-- NodeJS
+Add dependency to your `build.gradle.kts`:
 
-## Usage
-
-### Adding Dependency
-
-You can publish the library locally for testing:
-```bash
-./gradlew :shared:publishToMavenLocal
+```kotlin
+dependencies {
+    implementation("dev.limebeck.libs:docker-client:0.0.1")
+}
 ```
+
+## 📖 Usage
 
 ### Initializing the Client
 
@@ -38,7 +40,7 @@ By default, the client is configured to connect via the local Unix socket:
 val dockerClient = DockerClient()
 ```
 
-You can customize the configuration using `DockerClientConfig`:
+Custom configuration using `DockerClientConfig`:
 
 ```kotlin
 val config = DockerClientConfig(
@@ -90,12 +92,9 @@ logsFlow.collect { logLine ->
 }
 ```
 
-### Extending the API
+### 🧩 Extending the API
 
-If you need to use an endpoint that is not yet implemented in the library, you can easily extend it by following the
-pattern used in the library.
-
-For example, to add support for a custom endpoint:
+If you need to use an endpoint that is not yet implemented, you can easily extend the client:
 
 ```kotlin
 val DockerClient.myCustomApi by ::MyCustom.api()
@@ -106,24 +105,37 @@ class MyCustom(val dockerClient: DockerClient) {
     }
 }
 ```
-## Project Structure
 
-- `shared`: The main module containing the Docker client implementation and generated models.
+## ⚠️ Current Limitations
+
+- Primarily tested on Linux (due to Unix socket dependency).
+- Only Unix sockets are supported for now.
+
+## 📂 Project Structure
+
+- `lib`: The main module containing the Docker client implementation and generated models.
 - `specs`: Contains the Docker API OpenAPI specification.
 - `sample/terminalApp`: A sample console application using the library.
 
 ### Running the Sample
 
-To run the sample on Linux:
 ```bash
 ./gradlew :sample:terminalApp:runDebugExecutableLinuxX64
 ```
 
-## Development
+## 🛠 Development
 
-The project uses OpenAPI Generator to create data models. When building the project, models are automatically generated into the `shared/build/generated/openapi` directory.
+The project uses OpenAPI Generator to create data models. When building the project, models are automatically generated into the `lib/build/generated/openapi` directory.
 
-To build the project, use:
+To build the project:
 ```bash
 ./gradlew build
 ```
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📜 License
+
+This project is licensed under the MIT License – see the [LICENSE](LICENSE) file for details.

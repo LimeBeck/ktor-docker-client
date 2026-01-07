@@ -1,8 +1,8 @@
 import arrow.continuations.SuspendApp
-import dev.limebeck.docker.client.DockerClient
-import dev.limebeck.docker.client.api.containers
-import dev.limebeck.docker.client.model.ContainerConfig
-import dev.limebeck.docker.client.model.ContainerLogsParameters
+import dev.limebeck.libs.docker.client.DockerClient
+import dev.limebeck.libs.docker.client.api.containers
+import dev.limebeck.libs.docker.client.model.ContainerConfig
+import dev.limebeck.libs.docker.client.model.ContainerLogsParameters
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.cancellation.CancellationException

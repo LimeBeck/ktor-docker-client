@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-include(":shared")
+include(":lib")
 include(":sample:terminalApp")
