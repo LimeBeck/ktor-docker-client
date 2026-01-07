@@ -1,5 +1,7 @@
 package dev.limebeck.docker.client
 
+import dev.limebeck.docker.client.api.AUTH_HEADER
+import dev.limebeck.docker.client.api.resolveServerForRegistry
 import dev.limebeck.docker.client.dslUtils.ApiCacheHolder
 import dev.limebeck.docker.client.model.ErrorResponse
 import dev.limebeck.docker.client.model.Result
@@ -14,7 +16,9 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
-import io.ktor.utils.io.InternalAPI
+import io.ktor.utils.io.*
+import io.ktor.utils.io.core.*
+import kotlin.io.encoding.Base64
 
 open class DockerClient(
     val config: DockerClientConfig = DockerClientConfig()
@@ -65,5 +69,27 @@ open class DockerClient(
                 setCapability(UnixSocketCapability, UnixSocketSettings(config.connectionConfig.socketPath))
             }
         }
+    }
+
+    fun HttpRequestBuilder.applyAuthForRegistry(registry: String) {
+        val (serverAddress, auth) = resolveServerForRegistry(registry)
+            .map { it to config.auth[it] }
+            .firstOrNull { it.second != null }
+            ?: return
+
+        val authHeader = when (auth!!) {
+            is DockerClientConfig.Auth.Credentials -> {
+                mapOf(
+                    "username" to auth.username,
+                    "password" to auth.password,
+                    "serveraddress" to serverAddress
+                )
+            }
+
+            is DockerClientConfig.Auth.Token -> {
+                mapOf("identitytoken" to auth.token)
+            }
+        }
+        header(AUTH_HEADER, Base64.encode(json.encodeToString(authHeader).toByteArray()))
     }
 }

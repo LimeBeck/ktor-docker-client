@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.flow
 
 val DockerClient.exec by ::Exec.api()
 
-class Exec(val dockerClient: DockerClient) {
+class Exec(private val dockerClient: DockerClient) {
     suspend fun startAndForget(
         id: String,
         config: ExecStartConfig = ExecStartConfig()

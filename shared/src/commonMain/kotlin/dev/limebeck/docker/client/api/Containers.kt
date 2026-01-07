@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.flow
 
 val DockerClient.containers by ::Containers.api()
 
-class Containers(val dockerClient: DockerClient) {
+class Containers(private val dockerClient: DockerClient) {
     suspend fun getList(): Result<List<ContainerSummary>, ErrorResponse> = with(dockerClient) {
         return client.get("/containers/json").parse()
     }
