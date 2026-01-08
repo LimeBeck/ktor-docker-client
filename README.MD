@@ -1,5 +1,6 @@
 # KMP Docker Client
 
+![Maven Central Version](https://img.shields.io/maven-central/v/dev.limebeck.libs/docker-client)
 [![Kotlin](https://img.shields.io/badge/kotlin-2.3.0-blue.svg?logo=kotlin)](https://kotlinlang.org)
 [![Ktor](https://img.shields.io/badge/ktor-3.3.3-orange.svg?logo=ktor)](https://ktor.io)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
