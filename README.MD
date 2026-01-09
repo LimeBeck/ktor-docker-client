@@ -31,6 +31,27 @@ dependencies {
 }
 ```
 
+## API Implementation Status
+
+### Implemented
+
+- **Container**: Manage containers (create, list, start, stop, etc.).
+- **Image**: Manage images (pull, list, delete, etc.).
+- **Network**: Manage networks (create, list, connect, etc.).
+- **Volume**: Manage volumes (create, list, delete, etc.).
+- **Exec**: Run commands inside containers.
+- **System**: System-level operations (ping, version, auth, etc.).
+
+### Not Implemented
+
+- **Swarm**
+- **Node**
+- **Service**
+- **Task**
+- **Secret**
+- **Config**
+- **Plugin**
+
 ## 📖 Usage
 
 ### Initializing the Client
