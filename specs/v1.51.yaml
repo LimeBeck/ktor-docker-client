@@ -417,6 +417,7 @@ definitions:
           Labels:
             description: "User-defined key/value metadata."
             type: "object"
+            x-nullable: true
             additionalProperties:
               type: "string"
           DriverConfig:
@@ -2261,7 +2262,7 @@ definitions:
 
   Volume:
     type: "object"
-    required: [Name, Driver, Mountpoint, Labels, Scope, Options]
+    required: [Name, Driver, Mountpoint, Scope, Options]
     properties:
       Name:
         type: "string"
@@ -2299,7 +2300,7 @@ definitions:
       Labels:
         type: "object"
         description: "User-defined key/value metadata."
-        x-nullable: false
+        x-nullable: true
         additionalProperties:
           type: "string"
         example:
