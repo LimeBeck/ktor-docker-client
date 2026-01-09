@@ -19,6 +19,7 @@ fun HTML.renderLayout(pageTitle: String, content: FlowContent.() -> Unit) {
             navLink("Containers", "hx-get" to "/containers", "hx-target" to "#main-content")
             navLink("Images", "hx-get" to "/images", "hx-target" to "#main-content")
             navLink("Volumes", "hx-get" to "/volumes", "hx-target" to "#main-content")
+            navLink("Networks", "hx-get" to "/networks", "hx-target" to "#main-content")
             navLink("System", "hx-get" to "/system", "hx-target" to "#main-content")
         }
         div {
@@ -76,4 +77,3 @@ fun FlowContent.renderError(message: String) {
 }
 
 fun String.escapeHtml() = replace("<", "&lt;").replace(">", "&gt;")
-

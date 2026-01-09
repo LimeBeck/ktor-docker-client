@@ -8,6 +8,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import routes.containers.containersRoute
 import routes.images.imagesRoute
+import routes.networks.networksRoute
 import routes.system.systemRoute
 import routes.volumes.volumesRoute
 
@@ -32,6 +33,7 @@ fun main() {
             imagesRoute(dockerClient)
             volumesRoute(dockerClient)
             systemRoute(dockerClient)
+            networksRoute(dockerClient)
         }
     }.start(wait = true)
 }

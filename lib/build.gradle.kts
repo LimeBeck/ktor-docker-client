@@ -134,6 +134,26 @@ openApiGenerate {
     )
 }
 
+// Fix for @SerialName(value = "Ports") val ports: kotlin.collections.Map<kotlin.String, kotlin.collections.List<PortBinding>>? = null
+tasks.named("openApiGenerate") {
+    doLast {
+        val genDir = file("$buildDir/generated/openapi")
+
+        fileTree(genDir).matching { include("**/*.kt") }.forEach { file ->
+            val content = file.readText()
+
+            if (content.contains("List<PortBinding>>")) {
+                val fixedContent = content.replace(
+                    "List<PortBinding>>",
+                    "List<PortBinding>?>"
+                )
+                file.writeText(fixedContent)
+                println("🩹 [PATCH] Fix Nullability in PortMap for file: ${file.name}")
+            }
+        }
+    }
+}
+
 mavenPublishing {
     publishToMavenCentral()
     signAllPublications()

@@ -2,19 +2,7 @@ package routes.containers
 
 import dev.limebeck.libs.docker.client.model.ContainerInspectResponse
 import dev.limebeck.libs.docker.client.model.ContainerSummary
-import kotlinx.html.FlowContent
-import kotlinx.html.a
-import kotlinx.html.button
-import kotlinx.html.div
-import kotlinx.html.h1
-import kotlinx.html.id
-import kotlinx.html.span
-import kotlinx.html.table
-import kotlinx.html.tbody
-import kotlinx.html.td
-import kotlinx.html.th
-import kotlinx.html.thead
-import kotlinx.html.tr
+import kotlinx.html.*
 import ui.badge
 import ui.card
 import ui.infoCard
@@ -134,17 +122,58 @@ fun FlowContent.renderContainerDetailsPage(id: String, info: ContainerInspectRes
         }
 
         if (info != null) {
-            div("grid grid-cols-1 md:grid-cols-2 gap-4") {
-                infoCard("General Information") {
-                    infoRow("Full ID", id, isCode = true)
-                    infoRow("Created", info.created ?: "-")
-                    infoRow("Driver", info.driver ?: "-")
-                    infoRow("Restart Count", info.restartCount?.toString() ?: "0")
+            details("bg-gray-800/50 rounded-lg border border-gray-700") {
+                summary("text-gray-400 text-xs uppercase font-bold p-4 cursor-pointer hover:bg-gray-700/50 transition-colors") {
+                    +"Details"
                 }
-                infoCard("Configuration") {
-                    val cmd = (listOfNotNull(info.path) + (info.args ?: emptyList())).joinToString(" ")
-                    infoRow("Command", cmd.ifEmpty { "-" }, isCode = true)
-                    infoRow("State", info.state?.status?.value ?: "-")
+                div("p-4 border-t border-gray-700 grid grid-cols-1 md:grid-cols-2 gap-4") {
+                    infoCard("General Information") {
+                        infoRow("Full ID", id, isCode = true)
+                        infoRow("Created", info.created ?: "-")
+                        infoRow("Driver", info.driver ?: "-")
+                        infoRow("Restart Count", info.restartCount?.toString() ?: "0")
+                    }
+
+                    infoCard("Configuration") {
+                        val cmd = (listOfNotNull(info.path) + (info.args ?: emptyList())).joinToString(" ")
+                        infoRow("Command", cmd.ifEmpty { "-" }, isCode = true)
+                        infoRow("State", info.state?.status?.value ?: "-")
+                    }
+
+                    infoCard("Network") {
+                        val ports = info.networkSettings?.ports
+                        if (ports.isNullOrEmpty()) {
+                            infoRow("Ports", "No ports exposed")
+                        } else {
+                            ports.forEach { (containerPort, hostBindings) ->
+                                val hostPortStrings = hostBindings?.map { "${it.hostIp}:${it.hostPort}" }?.joinToString()
+                                infoRow(containerPort, hostPortStrings ?: "Not mapped", isCode = true)
+                            }
+                        }
+                    }
+
+                    infoCard("Environment Variables") {
+                        val env = info.config?.env
+                        if (env.isNullOrEmpty()) {
+                            infoRow("Variables", "No environment variables set")
+                        } else {
+                            env.forEach {
+                                val (key, value) = it.split("=", limit = 2)
+                                infoRow(key, value, isCode = true)
+                            }
+                        }
+                    }
+
+                    infoCard("Volumes") {
+                        val mounts = info.mounts
+                        if (mounts.isNullOrEmpty()) {
+                            infoRow("Mounts", "No volumes mounted")
+                        } else {
+                            mounts.forEach {
+                                infoRow(it.destination ?: "n/a", it.source ?: "anonymous", isCode = true)
+                            }
+                        }
+                    }
                 }
             }
         } else {
