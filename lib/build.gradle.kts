@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 
 plugins {
@@ -23,7 +24,11 @@ kotlin {
         }
     }
 
-    jvm {}
+    jvm {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
+    }
 
     sourceSets {
         commonMain {
@@ -46,11 +51,6 @@ kotlin {
         commonTest.dependencies {
             implementation(kotlin("test"))
         }
-
-        linuxMain.dependencies {
-            implementation(libs.ktor.client.curl)
-        }
-
     }
 
     //https://kotlinlang.org/docs/native-objc-interop.html#export-of-kdoc-comments-to-generated-objective-c-headers
