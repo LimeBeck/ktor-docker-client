@@ -14,7 +14,13 @@ kotlin {
     linuxX64()
 
     js {
-        nodejs()
+        nodejs {
+            testTask {
+                useMocha {
+                    timeout = "30s"
+                }
+            }
+        }
     }
 
     jvm {}
