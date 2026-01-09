@@ -12,6 +12,11 @@ import io.ktor.http.*
 const val DEFAULT_SERVER_ADDRESS = "https://index.docker.io/v1/"
 const val AUTH_HEADER = "X-Registry-Auth"
 
+/**
+ * Check auth configuration
+ *
+ * Validate credentials for a registry and, if available, get an identity token for accessing the registry without password.
+ */
 suspend fun DockerClient.auth(authConfig: AuthConfig): Result<SystemAuthResponse, ErrorResponse> {
     return client.post("/auth") {
         contentType(ContentType.Application.Json)
@@ -24,6 +29,12 @@ suspend fun DockerClient.auth(authConfig: AuthConfig): Result<SystemAuthResponse
     }
 }
 
+/**
+ * Resolve server address for registry.
+ *
+ * @param registry Registry name (e.g., "docker.io")
+ * @return List of server address candidates in priority order
+ */
 fun resolveServerForRegistry(registry: String): List<String> {
     // return candidates in priority order
     return if (registry == "docker.io") {

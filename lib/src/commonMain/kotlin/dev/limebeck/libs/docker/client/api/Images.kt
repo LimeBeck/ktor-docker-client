@@ -12,6 +12,12 @@ import io.ktor.utils.io.*
 val DockerClient.images by ::Images.api()
 
 class Images(private val dockerClient: DockerClient) {
+    /**
+     * List Images
+     *
+     * Returns a list of images on the server. Note that it uses a different, smaller representation of an image
+     * than inspecting a single image.
+     */
     suspend fun list(
         all: Boolean = false,
         filters: Map<String, List<String>>? = null,
@@ -29,6 +35,11 @@ class Images(private val dockerClient: DockerClient) {
             }.parse()
         }
 
+    /**
+     * Create an image
+     *
+     * Create an image by either pulling it from a registry or importing it.
+     */
     suspend fun create(
         fromImage: String,
         fromSrc: String? = null,
@@ -57,6 +68,11 @@ class Images(private val dockerClient: DockerClient) {
             }.validateOnly()
         }
 
+    /**
+     * Inspect an image
+     *
+     * Return low-level information about an image.
+     */
     suspend fun inspect(
         name: String,
         manifests: Boolean = false
@@ -67,11 +83,26 @@ class Images(private val dockerClient: DockerClient) {
             }.parse()
         }
 
+    /**
+     * Get the history of an image
+     *
+     * Return parent layers of an image.
+     */
     suspend fun history(name: String): Result<List<HistoryResponseItem>, ErrorResponse> =
         with(dockerClient) {
             client.get("/images/$name/history").parse()
         }
 
+    /**
+     * Push an image
+     *
+     * Push an image to a registry.
+     *
+     * If you wish to push an image on to a private registry, that image must already have a tag which references
+     * the registry. For example, `registry.example.com/myimage:latest`.
+     *
+     * The push is then performed by referencing the tag.
+     */
     suspend fun push(
         name: String,
         tag: String? = null,
@@ -86,6 +117,11 @@ class Images(private val dockerClient: DockerClient) {
             }.validateOnly()
         }
 
+    /**
+     * Tag an image
+     *
+     * Tag an image so that it becomes part of a repository.
+     */
     suspend fun tag(
         name: String,
         repo: String? = null,
@@ -98,6 +134,14 @@ class Images(private val dockerClient: DockerClient) {
             }.validateOnly()
         }
 
+    /**
+     * Remove an image
+     *
+     * Remove an image, along with any untagged parent images that were referenced by that image.
+     *
+     * Images can't be removed if they have descendant images, are being used by a container, or are being pushed
+     * or pulled.
+     */
     suspend fun remove(
         name: String,
         force: Boolean = false,
@@ -110,6 +154,11 @@ class Images(private val dockerClient: DockerClient) {
             }.parse()
         }
 
+    /**
+     * Search images
+     *
+     * Search for images on Docker Hub.
+     */
     suspend fun search(
         term: String,
         limit: Int? = null,
@@ -123,6 +172,9 @@ class Images(private val dockerClient: DockerClient) {
             }.parse()
         }
 
+    /**
+     * Delete unused images
+     */
     suspend fun prune(
         filters: Map<String, List<String>>? = null
     ): Result<ImagePruneResponse, ErrorResponse> =
@@ -132,6 +184,11 @@ class Images(private val dockerClient: DockerClient) {
             }.parse()
         }
 
+    /**
+     * Export an image
+     *
+     * Get a tarball containing all images and metadata for a repository.
+     */
     suspend fun export(
         name: String,
         platform: String? = null
@@ -147,6 +204,11 @@ class Images(private val dockerClient: DockerClient) {
             }
         }
 
+    /**
+     * Export several images
+     *
+     * Get a tarball containing all images and metadata for several image repositories.
+     */
     suspend fun exportAll(
         names: List<String>? = null,
         platform: String? = null
@@ -163,6 +225,11 @@ class Images(private val dockerClient: DockerClient) {
             }
         }
 
+    /**
+     * Import images
+     *
+     * Load a set of images from a tar archive.
+     */
     suspend fun load(
         quiet: Boolean = false,
         body: ByteReadChannel

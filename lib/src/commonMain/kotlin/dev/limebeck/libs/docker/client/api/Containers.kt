@@ -16,17 +16,35 @@ import kotlinx.coroutines.flow.flow
 val DockerClient.containers by ::Containers.api()
 
 class Containers(private val dockerClient: DockerClient) {
+    /**
+     * List containers
+     *
+     * Returns a list of containers. For details on the format, see the [inspect endpoint](#operation/ContainerInspect).
+     * Note that it uses a different, smaller representation of a container than inspecting a single container.
+     * For example, the list of linked containers is not propagated.
+     */
     suspend fun getList(): Result<List<ContainerSummary>, ErrorResponse> =
         with(dockerClient) {
             return client.get("/containers/json")
                 .parse()
         }
 
+    /**
+     * Inspect a container
+     *
+     * Return low-level information about a container.
+     */
     suspend fun getInfo(id: String): Result<ContainerInspectResponse, ErrorResponse> =
         with(dockerClient) {
             return client.get("/containers/$id/json").parse()
         }
 
+    /**
+     * Get container logs
+     *
+     * Get `stdout` and `stderr` logs from a container.
+     * Note: This endpoint works only for containers with the `json-file` or `journald` logging driver.
+     */
     suspend fun getLogs(
         id: String,
         parameters: ContainerLogsParameters = ContainerLogsParameters()
@@ -64,6 +82,9 @@ class Containers(private val dockerClient: DockerClient) {
             }
         }
 
+    /**
+     * Create a container
+     */
     suspend fun create(
         name: String? = null,
         config: ContainerConfig = ContainerConfig()
@@ -76,12 +97,18 @@ class Containers(private val dockerClient: DockerClient) {
             }.parse()
         }
 
+    /**
+     * Start a container
+     */
     suspend fun start(id: String): Result<Unit, ErrorResponse> =
         with(dockerClient) {
             return client.post("/containers/$id/start")
                 .validateOnly()
         }
 
+    /**
+     * Stop a container
+     */
     suspend fun stop(
         id: String,
         signal: String? = null,
@@ -94,6 +121,9 @@ class Containers(private val dockerClient: DockerClient) {
             }.validateOnly()
         }
 
+    /**
+     * Remove a container
+     */
     suspend fun remove(
         id: String,
         force: Boolean = false,
@@ -108,6 +138,9 @@ class Containers(private val dockerClient: DockerClient) {
             }.validateOnly()
         }
 
+    /**
+     * Restart a container
+     */
     suspend fun restart(
         id: String,
         signal: String? = null,
@@ -120,6 +153,11 @@ class Containers(private val dockerClient: DockerClient) {
             }.validateOnly()
         }
 
+    /**
+     * Kill a container
+     *
+     * Send a POSIX signal to a container, defaulting to killing to the container with `SIGKILL`.
+     */
     suspend fun kill(
         id: String,
         signal: String? = null
@@ -130,6 +168,11 @@ class Containers(private val dockerClient: DockerClient) {
             }.validateOnly()
         }
 
+    /**
+     * Update a container
+     *
+     * Change various configuration options of a container without having to recreate it.
+     */
     suspend fun update(
         id: String,
         config: ContainerUpdateRequest
@@ -141,6 +184,9 @@ class Containers(private val dockerClient: DockerClient) {
             }.parse()
         }
 
+    /**
+     * Rename a container
+     */
     suspend fun rename(
         id: String,
         name: String
@@ -151,18 +197,36 @@ class Containers(private val dockerClient: DockerClient) {
             }.validateOnly()
         }
 
+    /**
+     * Pause a container
+     *
+     * Use the freezer cgroup to suspend all processes in a container.
+     *
+     * Traditionally, when suspending a container the state of the container is preserved, for example, process
+     * environment variables and memory contents.
+     *
+     * When the container is resumed, it will continue from where it left off.
+     */
     suspend fun pause(id: String): Result<Unit, ErrorResponse> =
         with(dockerClient) {
             return client.post("/containers/$id/pause")
                 .validateOnly()
         }
 
+    /**
+     * Unpause a container
+     *
+     * Resume a container which has been paused.
+     */
     suspend fun unpause(id: String): Result<Unit, ErrorResponse> =
         with(dockerClient) {
             return client.post("/containers/$id/unpause")
                 .validateOnly()
         }
 
+    /**
+     * Delete unused containers
+     */
     suspend fun prune(
         filters: Map<String, List<String>>? = null
     ): Result<ContainerPruneResponse, ErrorResponse> =
@@ -177,6 +241,11 @@ class Containers(private val dockerClient: DockerClient) {
             }.parse()
         }
 
+    /**
+     * List processes running inside a container
+     *
+     * On Unix systems, this is done by running the `ps` command. This endpoint is not supported on Windows.
+     */
     suspend fun getTop(
         id: String,
         psArgs: String? = null
@@ -187,12 +256,32 @@ class Containers(private val dockerClient: DockerClient) {
             }.parse()
         }
 
+    /**
+     * Get changes on a container's filesystem
+     *
+     * Returns which files in a container's filesystem have been added, deleted, or modified.
+     * The `Kind` of modification can be one of:
+     *
+     * - `0`: Modified ("C")
+     * - `1`: Added ("A")
+     * - `2`: Deleted ("D")
+     */
     suspend fun getChanges(id: String): Result<List<FilesystemChange>, ErrorResponse> =
         with(dockerClient) {
             return client.get("/containers/$id/changes")
                 .parse()
         }
 
+    /**
+     * Get container stats based on resource usage
+     *
+     * This endpoint returns a live stream of a container’s resource usage statistics.
+     *
+     * The `precpu_stats` is the CPU statistic of the previous read, and is used to calculate the CPU usage percentage.
+     * It is not applicable to the first read.
+     *
+     * On Empire, the `networks` object is only present if the container is using the `bridge` network driver.
+     */
     suspend fun getStats(
         id: String,
         stream: Boolean = true,
@@ -229,6 +318,11 @@ class Containers(private val dockerClient: DockerClient) {
             return statsFlow.asSuccess()
         }
 
+    /**
+     * Resize a container TTY
+     *
+     * Resize the TTY session used by a container. You must restart the container for the resize to take effect.
+     */
     suspend fun resize(
         id: String,
         h: Int,
@@ -241,6 +335,11 @@ class Containers(private val dockerClient: DockerClient) {
             }.validateOnly()
         }
 
+    /**
+     * Wait for a container
+     *
+     * Block until a container stops, then returns the exit code.
+     */
     suspend fun wait(
         id: String,
         condition: String? = null
@@ -251,6 +350,11 @@ class Containers(private val dockerClient: DockerClient) {
             }.parse()
         }
 
+    /**
+     * Export a container
+     *
+     * Export the contents of a container as a tarball.
+     */
     suspend fun export(id: String): Result<ByteReadChannel, ErrorResponse> =
         with(dockerClient) {
             val response = client.get("/containers/$id/export")
@@ -263,6 +367,11 @@ class Containers(private val dockerClient: DockerClient) {
             }
         }
 
+    /**
+     * Get information about files in a container
+     *
+     * A response header `X-Docker-Container-Path-Stat` is return containing a base64 - encoded JSON object with some filesystem statistics.
+     */
     suspend fun getArchiveInfo(
         id: String,
         path: String
@@ -280,6 +389,11 @@ class Containers(private val dockerClient: DockerClient) {
             }
         }
 
+    /**
+     * Get an archive of a filesystem resource in a container
+     *
+     * Get a tar archive of a resource in the filesystem of container id.
+     */
     suspend fun getArchive(
         id: String,
         path: String
@@ -298,6 +412,11 @@ class Containers(private val dockerClient: DockerClient) {
             }
         }
 
+    /**
+     * Extract an archive of files or folders into a directory in a container
+     *
+     * Upload a tar archive to be extracted to a path in the filesystem of container id.
+     */
     suspend fun putArchive(
         id: String,
         path: String,
@@ -314,6 +433,11 @@ class Containers(private val dockerClient: DockerClient) {
             }.validateOnly()
         }
 
+    /**
+     * Create an exec instance
+     *
+     * Run a command inside a running container.
+     */
     suspend fun execCreate(
         id: String,
         config: ExecConfig
@@ -325,6 +449,11 @@ class Containers(private val dockerClient: DockerClient) {
             }.parse()
         }
 
+    /**
+     * Attach to a container
+     *
+     * Attach to a container to freely input into it and receive output, including it's initial output.
+     */
     suspend fun attach(
         id: String,
         detachKeys: String? = null,

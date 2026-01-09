@@ -14,6 +14,12 @@ import kotlinx.coroutines.flow.flow
 val DockerClient.exec by ::Exec.api()
 
 class Exec(private val dockerClient: DockerClient) {
+    /**
+     * Start an exec instance
+     *
+     * Starts a previously set up exec instance. If detach is true, this endpoint returns immediately after starting
+     * the command. Otherwise, it sets up an interactive session with the command.
+     */
     suspend fun startAndForget(
         id: String,
         config: ExecStartConfig = ExecStartConfig()
@@ -24,6 +30,9 @@ class Exec(private val dockerClient: DockerClient) {
         }.validateOnly()
     }
 
+    /**
+     * Start an exec instance and receive output
+     */
     suspend fun startFlow(
         id: String,
         config: ExecStartConfig = ExecStartConfig()
@@ -56,11 +65,22 @@ class Exec(private val dockerClient: DockerClient) {
             }
         }
 
+    /**
+     * Inspect an exec instance
+     *
+     * Return low-level information about an exec instance.
+     */
     suspend fun getInfo(id: String): Result<ExecInspectResponse, ErrorResponse> =
         with(dockerClient) {
             return client.get("/exec/$id/json").parse()
         }
 
+    /**
+     * Resize an exec instance
+     *
+     * Resize the TTY session used by an exec instance. This endpoint only works if `tty` was specified as `true`
+     * when creating the exec instance.
+     */
     suspend fun resize(
         id: String,
         h: Int,
