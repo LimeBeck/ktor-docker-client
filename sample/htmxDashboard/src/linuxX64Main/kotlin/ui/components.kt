@@ -8,6 +8,11 @@ fun HTML.renderLayout(pageTitle: String, content: FlowContent.() -> Unit) {
         title(pageTitle)
         script(src = "https://unpkg.com/htmx.org@1.9.10") {}
         script(src = "https://unpkg.com/htmx.org@1.9.10/dist/ext/sse.js") {}
+
+        link(rel = "stylesheet", href = "https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css")
+        script(src = "https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js") {}
+        script(src = "https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js") {}
+
         script(src = "https://cdn.tailwindcss.com") {}
     }
     body("bg-gray-900 text-gray-100 p-8 font-sans max-w-6xl mx-auto") {
@@ -30,7 +35,7 @@ fun HTML.renderLayout(pageTitle: String, content: FlowContent.() -> Unit) {
 }
 
 fun FlowContent.navLink(text: String, vararg htmxAttrs: Pair<String, String>) {
-    a(classes = "text-gray-400 hover:text-white transition-colors cursor-pointer font-medium") {
+    a(classes = "text-gray-400 hover:text-white transition-colors font-medium") {
         attributes["hx-push-url"] = "true"
         htmxAttrs.forEach { (k, v) -> attributes[k] = v }
         +text

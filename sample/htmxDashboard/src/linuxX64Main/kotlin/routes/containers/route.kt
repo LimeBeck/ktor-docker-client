@@ -3,9 +3,11 @@ package routes.containers
 import dev.limebeck.libs.docker.client.DockerClient
 import dev.limebeck.libs.docker.client.api.containers
 import dev.limebeck.libs.docker.client.model.ContainerLogsParameters
+import dev.limebeck.libs.docker.client.model.ExecConfig
 import dev.limebeck.libs.docker.client.model.LogLine
 import io.ktor.http.*
 import io.ktor.server.html.*
+import io.ktor.server.request.receiveParameters
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.utils.io.*
@@ -145,6 +147,22 @@ fun Routing.containersRoute(dockerClient: DockerClient) {
                     flush()
                 }
             }
+        }
+
+        post("/{id}/exec") {
+            val id = call.parameters["id"]!!
+            val command = call.receiveParameters()["command"]
+            val exec = dockerClient.containers.execCreate(
+                id, ExecConfig(
+                    attachStdin = true,
+                    attachStdout = true,
+                    attachStderr = true,
+                    cmd = command?.split(" ") ?: listOf("/bin/sh"),
+                    tty = true
+                )
+            ).getOrThrow()
+            call.response.headers.append("HX-Redirect", "/exec/${exec.id}")
+            call.respond(HttpStatusCode.OK)
         }
     }
 }

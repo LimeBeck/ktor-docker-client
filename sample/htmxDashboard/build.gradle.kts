@@ -14,6 +14,7 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.ktor.server.core)
             implementation(libs.ktor.server.cio)
+            implementation(libs.ktor.server.websockets)
             implementation(libs.ktor.server.html.builder)
             implementation(libs.kotlinx.html)
             implementation(libs.limebeck.common)

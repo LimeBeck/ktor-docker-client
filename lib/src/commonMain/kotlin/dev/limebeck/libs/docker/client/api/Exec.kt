@@ -12,9 +12,7 @@ import io.ktor.utils.io.*
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.onEach
 import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 val DockerClient.exec by ::Exec.api()
 
@@ -44,11 +42,14 @@ class Exec(private val dockerClient: DockerClient) {
     @OptIn(ExperimentalUuidApi::class)
     suspend fun startInteractive(
         id: String,
-        config: ExecStartConfig = ExecStartConfig(tty = true)
+        consoleSize: Pair<Int, Int>? = null
     ): Result<ExecSession, ErrorResponse> = with(dockerClient) {
         coroutineScope {
-            val execInfo = getInfo(id).getOrNull()
-            val isTty = execInfo?.processConfig?.tty == true || config.tty == true
+            val config = ExecStartConfig(
+                detach = false,
+                tty = true,
+                consoleSize = consoleSize?.let { listOf(it.first, it.second) }
+            )
 
             val conn = openRawConnection()
 
@@ -88,7 +89,7 @@ class Exec(private val dockerClient: DockerClient) {
                 val incomingChannel = prependLeftover(hs.leftover, conn.read)
 
                 val incomingFlow: Flow<LogLine> = flow {
-                    incomingChannel.readLogLines(isTty, this@flow)
+                    incomingChannel.readLogLines(true, this@flow)
                 }
 
                 val session = ExecSession(incomingFlow, conn)
