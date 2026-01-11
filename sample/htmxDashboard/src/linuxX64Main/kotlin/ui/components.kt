@@ -21,11 +21,11 @@ fun HTML.renderLayout(pageTitle: String, content: FlowContent.() -> Unit) {
             classes = setOf("fixed top-4 right-4 z-50 flex flex-col gap-2")
         }
         nav("flex gap-6 mb-8 border-b border-gray-700 pb-4") {
-            navLink("Containers", "hx-get" to "/containers", "hx-target" to "#main-content")
-            navLink("Images", "hx-get" to "/images", "hx-target" to "#main-content")
-            navLink("Volumes", "hx-get" to "/volumes", "hx-target" to "#main-content")
-            navLink("Networks", "hx-get" to "/networks", "hx-target" to "#main-content")
-            navLink("System", "hx-get" to "/system", "hx-target" to "#main-content")
+            navLink("Containers", "/containers", "#main-content")
+            navLink("Images", "/images", "#main-content")
+            navLink("Volumes", "/volumes", "#main-content")
+            navLink("Networks", "/networks", "#main-content")
+            navLink("System", "/system", "#main-content")
         }
         div {
             id = "main-content"
@@ -34,9 +34,11 @@ fun HTML.renderLayout(pageTitle: String, content: FlowContent.() -> Unit) {
     }
 }
 
-fun FlowContent.navLink(text: String, vararg htmxAttrs: Pair<String, String>) {
-    a(classes = "text-gray-400 hover:text-white transition-colors font-medium") {
+fun FlowContent.navLink(text: String, link: String, target: String, vararg htmxAttrs: Pair<String, String>) {
+    a(classes = "text-gray-400 hover:text-white transition-colors font-medium", href = link) {
         attributes["hx-push-url"] = "true"
+        attributes["hx-get"] = link
+        attributes["hx-target"] = target
         htmxAttrs.forEach { (k, v) -> attributes[k] = v }
         +text
     }
