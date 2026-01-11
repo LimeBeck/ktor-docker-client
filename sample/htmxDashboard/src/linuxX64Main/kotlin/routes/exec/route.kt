@@ -1,4 +1,4 @@
-package routes.containers
+package routes.exec
 
 import dev.limebeck.libs.docker.client.DockerClient
 import dev.limebeck.libs.docker.client.api.containers
@@ -6,10 +6,10 @@ import dev.limebeck.libs.docker.client.api.exec
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.utils.io.*
-import io.ktor.utils.io.core.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.launch
 import logger
 import routes.respondSmart
@@ -40,21 +40,24 @@ fun Routing.execRoute(dockerClient: DockerClient) {
             }
 
             val job = launch {
+                val buffer = ByteArray(8192)
                 val channel = execConnection.connection.read
                 while (!channel.isClosedForRead) {
-                    val bytes = byteArrayOf(channel.readByte())
-                    logger.debug { "Read byte" }
+                    val bytesRead = channel.readAvailable(buffer)
+                    logger.debug { "Read $bytesRead bytes" }
                     send(
                         Frame.Binary(
                             true,
-                            bytes
+                            buffer.copyOfRange(0, bytesRead)
                         )
                     )
                 }
-                close(CloseReason(CloseReason.Codes.NORMAL, "Exec finished with"))
+                close(CloseReason(CloseReason.Codes.NORMAL, "Exec finished"))
             }
 
-            input.collect {
+            input.onCompletion {
+                execConnection.close()
+            }.collect {
                 execConnection.send(it)
             }
 

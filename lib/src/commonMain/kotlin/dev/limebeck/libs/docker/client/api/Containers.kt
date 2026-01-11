@@ -316,10 +316,7 @@ class Containers(private val dockerClient: DockerClient) {
                     while (!channel.isClosedForRead) {
                         val line = channel.readUTF8Line() ?: break
                         if (line.isEmpty()) continue
-                        val stats =
-                            json.decodeFromString<ContainerStatsResponse>(
-                                line
-                            )
+                        val stats = json.decodeFromString<ContainerStatsResponse>(line)
                         emit(stats)
                     }
                 }

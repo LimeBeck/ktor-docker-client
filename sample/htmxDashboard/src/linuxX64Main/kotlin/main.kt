@@ -9,7 +9,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.WebSockets
 import routes.containers.containersRoute
-import routes.containers.execRoute
+import routes.exec.execRoute
 import routes.images.imagesRoute
 import routes.networks.networksRoute
 import routes.system.systemRoute
