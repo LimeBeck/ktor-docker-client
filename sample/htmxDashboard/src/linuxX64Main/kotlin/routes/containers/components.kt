@@ -222,3 +222,30 @@ fun FlowContent.renderLogsWindow(containerId: String) {
         div("text-gray-600 italic mb-2") { +"--- Initializing log stream ---" }
     }
 }
+
+fun FlowContent.renderCreateForm() {
+    div("mb-6 bg-gray-800 rounded-lg p-4 border border-gray-700") {
+        h2("text-xl font-bold mb-4 text-blue-400") { +"Create New Container" }
+        form {
+            attributes["hx-post"] = "/containers/create"
+            attributes["hx-target"] = "#main-content"
+            div("mb-4") {
+                label(classes = "block text-gray-400 mb-2") { +"Image" }
+                input(type = InputType.text, name = "image", classes = "bg-gray-700 text-white p-2 rounded w-full") {
+                    placeholder = "e.g. ubuntu:latest"
+                    required = true
+                }
+            }
+            div("mb-4") {
+                label(classes = "block text-gray-400 mb-2") { +"Command" }
+                input(type = InputType.text, name = "cmd", classes = "bg-gray-700 text-white p-2 rounded w-full") {
+                    placeholder = "e.g. /bin/bash"
+                    value = "/bin/sh"
+                }
+            }
+            button(type = ButtonType.submit, classes = "bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded text-sm font-bold") {
+                +"Create and Run"
+            }
+        }
+    }
+}

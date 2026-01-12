@@ -3,7 +3,6 @@ package dev.limebeck.libs.docker.client.api
 import dev.limebeck.libs.docker.client.DockerClient
 import dev.limebeck.libs.docker.client.model.ContainerConfig
 import dev.limebeck.libs.docker.client.model.ExecConfig
-import dev.limebeck.libs.docker.client.model.ExecStartConfig
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -44,7 +43,7 @@ class ExecTest {
 
             println("Exec ID: $execId")
 
-            val result = client.exec.startInteractive(execId, ExecStartConfig(detach = false, tty = true)).getOrThrow()
+            val result = client.exec.startInteractive(execId).getOrThrow()
 
             val exec = client.exec.getInfo(execId).getOrNull()
             println(exec)
@@ -87,7 +86,7 @@ class ExecTest {
 
             println("Exec ID: $execId")
 
-            val result = client.exec.startInteractive(execId, ExecStartConfig(detach = false, tty = true)).getOrThrow()
+            val result = client.exec.startInteractive(execId).getOrThrow()
 
             val exec = client.exec.getInfo(execId).getOrNull()
             println(exec)

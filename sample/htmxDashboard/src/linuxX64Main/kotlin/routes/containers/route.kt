@@ -2,6 +2,7 @@ package routes.containers
 
 import dev.limebeck.libs.docker.client.DockerClient
 import dev.limebeck.libs.docker.client.api.containers
+import dev.limebeck.libs.docker.client.model.ContainerConfig
 import dev.limebeck.libs.docker.client.model.ContainerLogsParameters
 import dev.limebeck.libs.docker.client.model.ExecConfig
 import dev.limebeck.libs.docker.client.model.LogLine
@@ -27,6 +28,7 @@ fun Routing.containersRoute(dockerClient: DockerClient) {
             val containers = dockerClient.containers.getList(true).getOrNull() ?: emptyList()
             respondSmart("Containers") {
                 h1("text-3xl font-bold mb-6 text-blue-400") { +"🐳 Containers" }
+                renderCreateForm()
                 containerTable(containers)
             }
         }
@@ -38,6 +40,25 @@ fun Routing.containersRoute(dockerClient: DockerClient) {
             respondSmart("Container Details") {
                 renderContainerDetailsPage(id, info)
             }
+        }
+
+        post("/create") {
+            val params = call.receiveParameters()
+            val image = params["image"] ?: return@post call.respond(HttpStatusCode.BadRequest, "Image is required")
+            val cmd = params["cmd"] ?: "/bin/sh"
+
+            val config = ContainerConfig(
+                image = image,
+                cmd = cmd.split(" "),
+                tty = true,
+                openStdin = true
+            )
+
+            val createResponse = dockerClient.containers.create(config = config).getOrThrow()
+            val containerId = createResponse.id
+
+            call.response.headers.append("HX-Redirect", "/containers/$containerId/terminal")
+            call.respond(HttpStatusCode.OK)
         }
 
         post("/{id}/start") {

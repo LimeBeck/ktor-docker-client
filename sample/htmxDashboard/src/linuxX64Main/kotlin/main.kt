@@ -13,6 +13,7 @@ import routes.exec.execRoute
 import routes.images.imagesRoute
 import routes.networks.networksRoute
 import routes.system.systemRoute
+import routes.terminal.terminalRoute
 import routes.volumes.volumesRoute
 
 class Application
@@ -38,6 +39,7 @@ fun main() {
             volumesRoute(dockerClient)
             systemRoute(dockerClient)
             networksRoute(dockerClient)
+            terminalRoute(dockerClient)
         }
     }.start(wait = true)
 }

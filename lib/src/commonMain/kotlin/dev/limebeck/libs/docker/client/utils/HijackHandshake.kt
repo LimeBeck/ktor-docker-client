@@ -1,14 +1,39 @@
 package dev.limebeck.libs.docker.client.utils
 
+import dev.limebeck.libs.docker.client.DockerClient
+import dev.limebeck.libs.docker.client.model.*
+import io.ktor.http.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
+import kotlin.contracts.ExperimentalContracts
 
 data class HijackHandshake(
     val status: Int,
     val leftover: ByteArray
 )
+
+fun buildHttpHeader(
+    method: HttpMethod,
+    path: String,
+    parameters: Parameters = Parameters.Empty,
+    headers: Map<String, String> = emptyMap()
+) = buildString {
+    val url = listOfNotNull(path, parameters.formUrlEncode().takeIf { it.isNotEmpty() }).joinToString("?")
+    append("${method.value} $url HTTP/1.1\r\n")
+    headers.forEach { (k, v) ->
+        append("$k: $v\r\n")
+    }
+    append("\r\n")
+}
+
+@OptIn(ExperimentalContracts::class)
+val HijackHandshake.isError: Boolean
+    get() = status != 101 && status != 200
 
 suspend fun readHttp11Headers(channel: ByteReadChannel): HijackHandshake {
     val buf = ByteArray(8 * 1024)
@@ -39,6 +64,7 @@ suspend fun readHttp11Headers(channel: ByteReadChannel): HijackHandshake {
             val leftover = ByteArray(acc.size - headerLen) { acc[headerLen + it] }
 
             val headerText = headerBytes.decodeToString()
+            DockerClient.logger.debug { "Response headers: $headerText" }
             val statusLine = headerText.lineSequence().firstOrNull()
                 ?: error("Bad HTTP response: empty status line")
 
@@ -68,4 +94,54 @@ fun prependLeftover(
         }
     }
     return out
+}
+
+suspend fun DockerClient.createInteractiveSession(
+    tty: Boolean,
+    method: HttpMethod,
+    path: String,
+    parameters: Parameters = Parameters.Empty,
+    headers: Map<String, String> = emptyMap(),
+    body: ByteArray? = null
+): Result<ExecSession, ErrorResponse> = coroutineScope {
+    val conn = openRawConnection()
+
+    val headers = buildHttpHeader(
+        method = method,
+        path = path,
+        parameters = parameters,
+        headers = headers + buildMap {
+            body?.let { set("Content-Length", body.size.toString()) }
+        }
+    )
+
+    try {
+        conn.write.writeFully(headers.encodeToByteArray())
+        body?.let { conn.write.writeFully(it) }
+        conn.write.flush()
+
+        DockerClient.logger.debug { "Send request: \n$headers" }
+
+        val hs = readHttp11Headers(conn.read)
+
+        if (hs.isError) {
+            conn.close()
+            return@coroutineScope ErrorResponse("Docker hijack failed: HTTP ${hs.status}").asError()
+        }
+
+        DockerClient.logger.debug { "Connection hjacked" }
+
+        val incomingChannel = prependLeftover(hs.leftover, conn.read)
+
+        val incomingFlow: Flow<LogLine> = flow {
+            incomingChannel.readLogLines(tty, this@flow)
+        }
+
+        val session = ExecSession(incomingFlow, tty, conn)
+
+        return@coroutineScope session.asSuccess()
+    } catch (t: Throwable) {
+        runCatching { conn.close() }
+        return@coroutineScope ErrorResponse(message = t.message ?: "createInteractiveSession failed").asError()
+    }
 }

@@ -1,4 +1,4 @@
-package routes.exec
+package routes.terminal
 
 import dev.limebeck.libs.docker.client.model.ContainerInspectResponse
 import kotlinx.html.FlowContent
@@ -9,12 +9,11 @@ import kotlinx.html.id
 import kotlinx.html.script
 import kotlinx.html.unsafe
 
-
-fun FlowContent.renderExecTerminal(containerId: String, execId: String, info: ContainerInspectResponse?) {
+fun FlowContent.renderTerminal(containerId: String, info: ContainerInspectResponse?) {
     div("space-y-6") {
         div("flex justify-between items-center") {
             h1("text-3xl font-bold text-blue-400") {
-                +"Exec: ${info?.name?.removePrefix("/") ?: containerId.take(12)}"
+                +"Terminal: ${info?.name?.removePrefix("/") ?: containerId.take(12)}"
             }
             a(classes = "text-gray-400 hover:text-white cursor-pointer") {
                 attributes["hx-get"] = "/containers/$containerId"
@@ -45,7 +44,7 @@ fun FlowContent.renderExecTerminal(containerId: String, execId: String, info: Co
                         term.open(terminalContainer);
                         fitAddon.fit();
             
-                        var socket = new WebSocket('ws://' + window.location.host + '/exec/$execId/ws');
+                        var socket = new WebSocket('ws://' + window.location.host + '/containers/$containerId/terminal/ws');
                         
                         socket.onopen = function() {
                             term.write('\r\n\x1b[32mConnection established.\x1b[0m\r\n');

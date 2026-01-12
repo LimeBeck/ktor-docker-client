@@ -10,6 +10,7 @@ import kotlin.uuid.Uuid
 
 class ExecSession(
     incomingFlow: Flow<LogLine>,
+    val isTty: Boolean,
     val connection: DockerRawConnection
 ) : AutoCloseable {
     @OptIn(ExperimentalUuidApi::class)

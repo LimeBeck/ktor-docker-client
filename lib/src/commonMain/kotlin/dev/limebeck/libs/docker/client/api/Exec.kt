@@ -3,15 +3,10 @@ package dev.limebeck.libs.docker.client.api
 import dev.limebeck.libs.docker.client.DockerClient
 import dev.limebeck.libs.docker.client.dsl.api
 import dev.limebeck.libs.docker.client.model.*
-import dev.limebeck.libs.docker.client.utils.prependLeftover
-import dev.limebeck.libs.docker.client.utils.readHttp11Headers
-import dev.limebeck.libs.docker.client.utils.readLogLines
+import dev.limebeck.libs.docker.client.utils.createInteractiveSession
 import io.ktor.client.request.*
 import io.ktor.http.*
-import io.ktor.utils.io.*
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlin.uuid.ExperimentalUuidApi
 
 val DockerClient.exec by ::Exec.api()
@@ -50,57 +45,21 @@ class Exec(private val dockerClient: DockerClient) {
                 tty = true,
                 consoleSize = consoleSize?.let { listOf(it.first, it.second) }
             )
+            val body = dockerClient.json.encodeToString(config)
+            val encodedBody = body.encodeToByteArray()
 
-            val conn = openRawConnection()
-
-            try {
-                val body = dockerClient.json.encodeToString(config)
-                val encodedBody = body.encodeToByteArray()
-
-                // Build hijack headers
-                val request = buildString {
-                    append("POST /exec/$id/start HTTP/1.1\r\n")
-                    append("Host: docker\r\n")
-                    append("Content-Type: application/json\r\n")
-                    append("Connection: Upgrade\r\n")
-                    append("Upgrade: tcp\r\n")
-                    append("Content-Length: ${encodedBody.size}\r\n")
-                    append("\r\n")
-                }
-
-                conn.write.writeFully(request.encodeToByteArray())
-                conn.write.writeFully(encodedBody)
-                conn.write.flush()
-
-                DockerClient.logger.debug { "Send request: \n$request$body" }
-
-                val hs = readHttp11Headers(conn.read)
-
-                // Typically 101, but sometimes may be 200.
-                if (hs.status != 101 && hs.status != 200) {
-                    conn.close()
-                    return@coroutineScope Result.error(
-                        ErrorResponse(
-                            message = "Docker hijack failed: HTTP ${hs.status}",
-                        )
-                    )
-                }
-
-                val incomingChannel = prependLeftover(hs.leftover, conn.read)
-
-                val incomingFlow: Flow<LogLine> = flow {
-                    incomingChannel.readLogLines(true, this@flow)
-                }
-
-                val session = ExecSession(incomingFlow, conn)
-
-                return@coroutineScope Result.success(session)
-            } catch (t: Throwable) {
-                runCatching { conn.close() }
-                return@coroutineScope Result.error(
-                    ErrorResponse(message = t.message ?: "startInteractive failed")
-                )
-            }
+            return@coroutineScope createInteractiveSession(
+                tty = true,
+                method = HttpMethod.Post,
+                path = "/exec/$id/start",
+                headers = buildMap {
+                    set("Host", "docker")
+                    set("Content-Type", "application/json")
+                    set("Connection", "Upgrade")
+                    set("Upgrade", "tcp")
+                },
+                body = encodedBody
+            )
         }
     }
 

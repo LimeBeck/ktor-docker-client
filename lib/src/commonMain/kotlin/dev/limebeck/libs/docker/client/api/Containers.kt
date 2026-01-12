@@ -3,6 +3,7 @@ package dev.limebeck.libs.docker.client.api
 import dev.limebeck.libs.docker.client.DockerClient
 import dev.limebeck.libs.docker.client.dsl.api
 import dev.limebeck.libs.docker.client.model.*
+import dev.limebeck.libs.docker.client.utils.createInteractiveSession
 import dev.limebeck.libs.docker.client.utils.readLogLines
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
@@ -468,33 +469,33 @@ class Containers(private val dockerClient: DockerClient) {
         stdin: Boolean = false,
         stdout: Boolean = false,
         stderr: Boolean = false
-    ): Result<Flow<LogLine>, ErrorResponse> =
+    ): Result<ExecSession, ErrorResponse> =
         with(dockerClient) {
             coroutineScope {
                 val container = getInfo(id).onError {
-                    return@coroutineScope Result.error(
-                        it
-                    )
-                }.getOrNull()
-                    ?: return@coroutineScope Result.error(
-                        ErrorResponse("Container not found")
-                    )
+                    return@coroutineScope Result.error(it)
+                }.getOrNull() ?: return@coroutineScope ErrorResponse("Container not found").asError()
 
-                val attachFlow = flow {
-                    client.preparePost("/containers/$id/attach") {
-                        applyConnectionConfig()
-                        detachKeys?.let { parameter("detachKeys", it) }
-                        parameter("logs", logs.toString())
-                        parameter("stream", stream.toString())
-                        parameter("stdin", stdin.toString())
-                        parameter("stdout", stdout.toString())
-                        parameter("stderr", stderr.toString())
-                    }.execute { response ->
-                        val channel = response.bodyAsChannel()
-                        channel.readLogLines(container.config?.tty == true, this@flow)
-                    }
-                }
-                attachFlow.asSuccess()
+                val isTty = container.config?.tty == true
+
+                return@coroutineScope createInteractiveSession(
+                    tty = isTty,
+                    method = HttpMethod.Post,
+                    path = "/containers/$id/attach",
+                    parameters = parameters {
+                        detachKeys?.let { append("detachKeys", it) }
+                        append("logs", logs.toString())
+                        append("stream", stream.toString())
+                        append("stdin", stdin.toString())
+                        append("stdout", stdout.toString())
+                        append("stderr", stderr.toString())
+                    },
+                    headers = mapOf(
+                        "Host" to "docker",
+                        "Connection" to "Upgrade",
+                        "Upgrade" to "tcp",
+                    )
+                )
             }
         }
 }
