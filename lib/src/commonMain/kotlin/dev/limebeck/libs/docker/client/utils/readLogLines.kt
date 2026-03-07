@@ -2,18 +2,17 @@ package dev.limebeck.libs.docker.client.utils
 
 import dev.limebeck.libs.docker.client.model.LogLine
 import io.ktor.utils.io.*
-import kotlinx.coroutines.flow.FlowCollector
 
 suspend fun ByteReadChannel.readLogLines(
     isTty: Boolean,
-    collector: FlowCollector<LogLine>
+    onMessage: suspend (LogLine) -> Unit
 ) {
     while (!isClosedForRead) {
         val message = if (!isTty) {
             val header = ByteArray(8)
             try {
                 readFully(header)
-            } catch (e: Throwable) {
+            } catch (_: Throwable) {
                 break
             }
 
@@ -30,7 +29,7 @@ suspend fun ByteReadChannel.readLogLines(
             val payloadBuffer = ByteArray(payloadSize)
             try {
                 readFully(payloadBuffer)
-            } catch (e: Throwable) {
+            } catch (_: Throwable) {
                 break
             }
 
@@ -46,7 +45,7 @@ suspend fun ByteReadChannel.readLogLines(
         } else {
             val line = try {
                 readUTF8Line()
-            } catch (e: Throwable) {
+            } catch (_: Throwable) {
                 null
             } ?: break
             LogLine(
@@ -55,6 +54,6 @@ suspend fun ByteReadChannel.readLogLines(
             )
         }
 
-        collector.emit(message)
+        onMessage(message)
     }
 }

@@ -55,7 +55,7 @@ fun FlowContent.renderImagesPage(images: List<ImageSummary>) {
                 images.forEach { image ->
                     tr("hover:bg-gray-700/50") {
                         td("px-6 py-4 font-mono text-sm") { +(image.id.removePrefix("sha256:").take(12)) }
-                        td("px-6 py-4") { +(image.repoTags.joinToString(", ")) }
+                        td("px-6 py-4") { +(image.repoTags?.joinToString(", ") ?: "") }
                         td("px-6 py-4") { +("${(image.propertySize) / 1024 / 1024} MB") }
                         td("px-6 py-4 flex gap-3") {
                             button(classes = "text-blue-400 hover:text-blue-300 font-medium") {

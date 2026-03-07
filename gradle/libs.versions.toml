@@ -1,12 +1,12 @@
 [versions]
 
-kotlin = "2.3.0"
-maven-publish = "0.35.0"
+kotlin = "2.3.10"
+maven-publish = "0.36.0"
 kotlinx-coroutines = "1.10.2"
-kotlinx-serialization = "1.8.1"
+kotlinx-serialization = "1.10.0"
 kotlinx-datetime = "0.6.2"
-ktor = "3.3.3"
-arrow = "2.2.1.1"
+ktor = "3.4.1"
+arrow = "2.2.2"
 dokka = "2.1.0"
 kotlinx-html = "0.11.0"
 limebeck-libs = "1.0.3"
@@ -41,7 +41,6 @@ multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotl
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "maven-publish" }
 kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-openapi-generator = { id = "org.openapi.generator", version = "7.18.0" }
+openapi-generator = { id = "org.openapi.generator", version = "7.20.0" }
 versions = { id = "com.github.ben-manes.versions", version = "0.53.0" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
-resources = { id = "dev.limebeck.kmp-resources", version = "0.0.3" }

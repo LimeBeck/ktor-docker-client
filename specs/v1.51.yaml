@@ -2086,8 +2086,6 @@ definitions:
     required:
       - Id
       - ParentId
-      - RepoTags
-      - RepoDigests
       - Created
       - Size
       - SharedSize
@@ -2126,7 +2124,7 @@ definitions:
           empty if no tags reference the image, in which case the image is
           "untagged", in which case it can still be referenced by its ID.
         type: "array"
-        x-nullable: false
+        x-nullable: true
         items:
           type: "string"
         example:

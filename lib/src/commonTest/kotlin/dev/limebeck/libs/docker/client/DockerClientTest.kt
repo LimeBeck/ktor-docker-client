@@ -27,7 +27,7 @@ class DockerClientTest {
 
         val channel = ByteReadChannel(header + payload)
         val logs = flow {
-            channel.readLogLines(isTty = false, this@flow)
+            channel.readLogLines(isTty = false) { emit(it) }
         }.toList()
 
         assertEquals(1, logs.size)
@@ -41,7 +41,7 @@ class DockerClientTest {
 
         val channel = ByteReadChannel(payload)
         val logs = flow {
-            channel.readLogLines(isTty = true, this@flow)
+            channel.readLogLines(isTty = true) { emit(it) }
         }.toList()
 
         assertEquals(2, logs.size)

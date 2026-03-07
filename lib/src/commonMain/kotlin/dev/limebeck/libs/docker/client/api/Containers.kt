@@ -12,6 +12,7 @@ import io.ktor.http.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flow
 
 val DockerClient.containers by ::Containers.api()
@@ -66,7 +67,7 @@ class Containers(private val dockerClient: DockerClient) {
                 }.getOrNull()
                     ?: return@coroutineScope ErrorResponse("Container not found").asError()
 
-                val logs = flow {
+                val logs = channelFlow {
                     client.prepareGet("/containers/${id}/logs") {
 
                         parameter("follow", parameters.follow.toString())
@@ -84,7 +85,7 @@ class Containers(private val dockerClient: DockerClient) {
                         }
                     }.execute {
                         val channel = it.bodyAsChannel()
-                        channel.readLogLines(container.config?.tty == true, this@flow)
+                        channel.readLogLines(container.config?.tty == true) { send(it) }
                     }
                 }
 

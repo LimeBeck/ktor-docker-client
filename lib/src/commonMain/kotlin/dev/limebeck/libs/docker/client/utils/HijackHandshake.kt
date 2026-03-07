@@ -8,14 +8,32 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.launch
 import kotlin.contracts.ExperimentalContracts
 
 data class HijackHandshake(
     val status: Int,
     val leftover: ByteArray
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as HijackHandshake
+
+        if (status != other.status) return false
+        if (!leftover.contentEquals(other.leftover)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = status
+        result = 31 * result + leftover.contentHashCode()
+        return result
+    }
+}
 
 fun buildHttpHeader(
     method: HttpMethod,
@@ -133,8 +151,8 @@ suspend fun DockerClient.createInteractiveSession(
 
         val incomingChannel = prependLeftover(hs.leftover, conn.read)
 
-        val incomingFlow: Flow<LogLine> = flow {
-            incomingChannel.readLogLines(tty, this@flow)
+        val incomingFlow: Flow<LogLine> = channelFlow {
+            incomingChannel.readLogLines(tty) { send(it) }
         }
 
         val session = ExecSession(incomingFlow, tty, conn)
