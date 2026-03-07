@@ -51,7 +51,7 @@ fun Routing.terminalRoute(dockerClient: DockerClient) {
                 val channel = session.connection.read
                 while (!channel.isClosedForRead) {
                     val bytesRead = channel.readAvailable(buffer)
-                    logger.debug { "Read $bytesRead bytes" }
+                    logger.trace { "Read $bytesRead bytes" }
                     send(
                         Frame.Binary(
                             true,

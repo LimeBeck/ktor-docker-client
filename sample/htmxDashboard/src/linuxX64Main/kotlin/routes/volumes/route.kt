@@ -16,14 +16,14 @@ import ui.renderError
 fun Route.volumesRoute(dockerClient: DockerClient) {
     route("/volumes") {
         get {
-            logger.debug { "Fetching volumes list" }
+            logger.info { "Fetching volumes list" }
             val volumes = dockerClient.volumes.getList().getOrNull()?.volumes ?: emptyList()
             respondSmart("Volumes") { renderVolumesPage(volumes) }
         }
 
         post {
             val name = call.receiveParameters()["name"] ?: ""
-            logger.debug { "Creating volume: $name" }
+            logger.info { "Creating volume: $name" }
             val result = dockerClient.volumes.create(VolumeCreateOptions(name = name))
 
             result.fold(
@@ -48,14 +48,14 @@ fun Route.volumesRoute(dockerClient: DockerClient) {
         }
 
         post("/prune") {
-            logger.debug { "Pruning volumes" }
+            logger.info { "Pruning volumes" }
             dockerClient.volumes.prune()
             call.respondRedirect("/volumes")
         }
 
         delete("/{name}") {
             val name = call.parameters["name"]!!
-            logger.debug { "Removing volume: $name" }
+            logger.info { "Removing volume: $name" }
             dockerClient.volumes.remove(name)
             call.respondRedirect("/volumes")
         }

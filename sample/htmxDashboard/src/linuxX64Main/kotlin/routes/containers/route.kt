@@ -24,7 +24,7 @@ import ui.renderError
 fun Routing.containersRoute(dockerClient: DockerClient) {
     route("/containers") {
         get {
-            logger.debug { "Fetching containers list" }
+            logger.info { "Fetching containers list" }
             val containers = dockerClient.containers.getList(true).getOrNull() ?: emptyList()
             respondSmart("Containers") {
                 h1("text-3xl font-bold mb-6 text-blue-400") { +"🐳 Containers" }
@@ -35,7 +35,7 @@ fun Routing.containersRoute(dockerClient: DockerClient) {
 
         get("/{id}") {
             val id = call.parameters["id"]!!
-            logger.debug { "Fetching container info for id: $id" }
+            logger.info { "Fetching container info for id: $id" }
             val info = dockerClient.containers.getInfo(id).getOrNull()
             respondSmart("Container Details") {
                 renderContainerDetailsPage(id, info)
@@ -63,12 +63,12 @@ fun Routing.containersRoute(dockerClient: DockerClient) {
 
         post("/{id}/start") {
             val containerId = call.parameters["id"]!!
-            logger.debug { "Starting container: $containerId" }
+            logger.info { "Starting container: $containerId" }
             val result = dockerClient.containers.start(containerId)
 
             result.fold(
                 onSuccess = {
-                    logger.debug { "Container $containerId started successfully" }
+                    logger.info { "Container $containerId started successfully" }
                     call.respondRedirect("/containers/$containerId")
                 },
                 onError = { error ->
@@ -91,12 +91,12 @@ fun Routing.containersRoute(dockerClient: DockerClient) {
 
         post("/{id}/stop") {
             val containerId = call.parameters["id"]!!
-            logger.debug { "Stopping container: $containerId" }
+            logger.info { "Stopping container: $containerId" }
             val result = dockerClient.containers.stop(containerId)
 
             result.fold(
                 onSuccess = {
-                    logger.debug { "Container $containerId stopped successfully" }
+                    logger.info { "Container $containerId stopped successfully" }
                     call.respondRedirect("/containers/$containerId")
                 },
                 onError = { error ->
@@ -119,12 +119,12 @@ fun Routing.containersRoute(dockerClient: DockerClient) {
 
         delete("/{id}") {
             val containerId = call.parameters["id"]!!
-            logger.debug { "Removing container: $containerId" }
+            logger.info { "Removing container: $containerId" }
             val result = dockerClient.containers.remove(containerId, force = true)
 
             result.fold(
                 onSuccess = {
-                    logger.debug { "Container $containerId removed successfully" }
+                    logger.info { "Container $containerId removed successfully" }
                     call.respondRedirect("/containers")
                 },
                 onError = { error ->
@@ -147,7 +147,7 @@ fun Routing.containersRoute(dockerClient: DockerClient) {
 
         get("/{id}/logs") {
             val id = call.parameters["id"] ?: return@get call.respond(HttpStatusCode.BadRequest)
-            logger.debug { "Streaming logs for container: $id" }
+            logger.info { "Streaming logs for container: $id" }
             call.response.cacheControl(CacheControl.NoCache(null))
             call.respondBytesWriter(contentType = ContentType.Text.EventStream) {
                 try {
@@ -157,6 +157,7 @@ fun Routing.containersRoute(dockerClient: DockerClient) {
                     ).getOrThrow()
 
                     logsFlow.collect { log ->
+                        logger.debug { "Container ${id.take(12)}: ${log.line}" }
                         val color = if (log.type == LogLine.Type.STDERR) "text-red-400" else "text-gray-400"
                         val html =
                             "<div class='leading-relaxed'><span class='$color'>${log.line.escapeHtml()}</span></div>"

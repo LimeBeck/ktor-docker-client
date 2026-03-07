@@ -12,14 +12,14 @@ import routes.respondSmart
 fun Routing.systemRoute(dockerClient: DockerClient) {
     route("/system") {
         get {
-            logger.debug { "Fetching system info and version" }
+            logger.info { "Fetching system info and version" }
             val info = dockerClient.system.getInfo().getOrNull()
             val version = dockerClient.system.getVersion().getOrNull()
             respondSmart("System Info") { renderSystemPage(info, version) }
         }
 
         get("/events") {
-            logger.debug { "Subscribing to system events" }
+            logger.info { "Subscribing to system events" }
             call.response.cacheControl(CacheControl.NoCache(null))
             call.respondBytesWriter(contentType = ContentType.Text.EventStream) {
                 dockerClient.system.events().collect { event ->

@@ -17,18 +17,18 @@ class ExecSession(
     private val sessionId = Uuid.generateV7().toString()
 
     init {
-        DockerClient.logger.debug { "ExecSession $sessionId started" }
+        DockerClient.logger.debug { "ExecSession $sessionId started (tty = $isTty)" }
     }
 
     val incoming = incomingFlow.onEach {
-        DockerClient.logger.debug { "ExecSession $sessionId received $it" }
+        DockerClient.logger.trace { "ExecSession $sessionId received $it" }
     }
 
     suspend fun send(bytes: ByteArray) {
-        DockerClient.logger.debug { "ExecSession $sessionId try to send ${bytes.size} bytes" }
+        DockerClient.logger.trace { "ExecSession $sessionId try to send ${bytes.size} bytes" }
         connection.write.writeFully(bytes)
         connection.write.flush()
-        DockerClient.logger.debug { "ExecSession $sessionId sent ${bytes.size} bytes" }
+        DockerClient.logger.trace { "ExecSession $sessionId sent ${bytes.size} bytes" }
     }
 
     suspend fun send(text: String) = send(text.encodeToByteArray())

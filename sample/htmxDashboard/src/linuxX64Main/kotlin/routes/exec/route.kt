@@ -44,7 +44,7 @@ fun Routing.execRoute(dockerClient: DockerClient) {
                 val channel = execConnection.connection.read
                 while (!channel.isClosedForRead) {
                     val bytesRead = channel.readAvailable(buffer)
-                    logger.debug { "Read $bytesRead bytes" }
+                    logger.trace { "Exec $execId: Read $bytesRead bytes" }
                     send(
                         Frame.Binary(
                             true,
@@ -56,8 +56,10 @@ fun Routing.execRoute(dockerClient: DockerClient) {
             }
 
             input.onCompletion {
+                logger.info { "Exec $execId: Close" }
                 execConnection.close()
             }.collect {
+                logger.trace { "Exec $execId: Send $it" }
                 execConnection.send(it)
             }
 

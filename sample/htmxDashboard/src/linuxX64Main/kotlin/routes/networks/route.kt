@@ -9,7 +9,7 @@ import routes.respondSmart
 fun Route.networksRoute(dockerClient: DockerClient) {
     route("/networks") {
         get {
-            logger.debug { "Fetching networks list" }
+            logger.info { "Fetching networks list" }
             val networks = dockerClient.networks.list().getOrNull() ?: emptyList()
             respondSmart("Networks") { renderNetworksPage(networks) }
         }

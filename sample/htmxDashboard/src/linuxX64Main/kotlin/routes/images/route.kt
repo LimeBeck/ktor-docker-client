@@ -16,14 +16,14 @@ import ui.renderError
 fun Routing.imagesRoute(dockerClient: DockerClient) {
     route("/images") {
         get {
-            logger.debug { "Fetching images list" }
+            logger.info { "Fetching images list" }
             val images = dockerClient.images.list().getOrNull() ?: emptyList()
             respondSmart("Images") { renderImagesPage(images) }
         }
 
         get("/{id}") {
             val id = call.parameters["id"]!!
-            logger.debug { "Inspecting image: $id" }
+            logger.info { "Inspecting image: $id" }
             val info = dockerClient.images.inspect(id).getOrNull()
             respondSmart("Image Details") {
                 renderImageDetailsPage(id, info)
@@ -32,12 +32,12 @@ fun Routing.imagesRoute(dockerClient: DockerClient) {
 
         post("/pull") {
             val name = call.receiveParameters()["image-pull-name"] ?: ""
-            logger.debug { "Pulling image: $name" }
+            logger.info { "Pulling image: $name" }
             val result = dockerClient.images.create(fromImage = name)
 
             result.fold(
                 onSuccess = {
-                    logger.debug { "Image $name pulled successfully" }
+                    logger.info { "Image $name pulled successfully" }
                     call.respondRedirect("/images")
                 },
                 onError = { error ->
@@ -58,14 +58,14 @@ fun Routing.imagesRoute(dockerClient: DockerClient) {
         }
 
         post("/prune") {
-            logger.debug { "Pruning images" }
+            logger.info { "Pruning images" }
             dockerClient.images.prune()
             call.respondRedirect("/images")
         }
 
         delete("/{id}") {
             val id = call.parameters["id"]!!
-            logger.debug { "Removing image: $id" }
+            logger.info { "Removing image: $id" }
             dockerClient.images.remove(id)
             call.respondRedirect("/images")
         }
