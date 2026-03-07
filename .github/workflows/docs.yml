@@ -1,0 +1,51 @@
+name: Docs CI
+
+on:
+  push:
+    branches:
+      - "master"
+  workflow_dispatch:
+
+jobs:
+  publish-dokka-docs:
+    name: Publish Dokka Docs
+    runs-on: ubuntu-latest
+    concurrency: docs-${{ github.ref }}
+    environment: github-pages
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ./.gradle/
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.konan/
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle
+
+      - name: Build Dokka with Gradle
+        run: ./gradlew :lib:dokkaGenerateHtml
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Dokka Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./lib/build/dokka/html
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

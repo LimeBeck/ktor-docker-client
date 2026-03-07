@@ -1,21 +1,19 @@
 # WAL (Write-Ahead Log)
 
 ## Current Focus
-- Extend CI/CD contract with Dokka documentation publication.
+- Fix unit test result publication permissions in release workflow.
 
 ## Completed in Last Session
-- Extended `.github/workflows/main.yml` with Dokka docs deployment job:
-  - added `push.branches: master` trigger for CI/docs flow
-  - added `publish-dokka-docs` job (`:lib:dokkaGenerateHtml`)
-  - publishes `./lib/build/dokka/html` to GitHub Pages via official pages actions
-- Updated CI/CD spec `specs/ipc/PROP-002.md` with docs publication anchors:
-  - `#triggers` includes docs branch trigger
-  - added `#docs` section for GitHub Pages Dokka contract
+- Fixed test result publication auth in release workflow:
+  - added workflow baseline permission `contents: read`
+  - added `publish-test-results` job permissions: `checks: write`, `contents: read`
+  - addresses `403 Resource not accessible by integration` from check-runs API
+- Updated `specs/ipc/PROP-002.md#test-results` with required `checks: write` permission.
 
 ## Next Steps
 1. Add repository secrets required by publish stage (`GPG_SIGNING_KEY`, `SECRET_PASSPHRASE`, `GPG_PASSWORD`, `GPG_KEY_ID`, `OSSRH_USERNAME`, `OSSRH_PASSWORD`).
 2. Enable GitHub Pages for repository and validate first docs deployment from `master`.
-3. Validate workflow on dry-run tag and verify Maven Central publish gate still runs only on `v*` tags.
+3. Re-run release workflow and verify `publish-test-results` creates Check Run successfully (no 403).
 
 ## Known Risks / Constraints
 - `:lib:allTests` includes JS/Native/JVM test execution and can increase runtime on GitHub runners.
@@ -28,5 +26,6 @@
 ## Resume Commands
 - `git status --short`
 - `cat .github/workflows/main.yml`
+- `cat .github/workflows/docs.yml`
 - `cat specs/ipc/PROP-002.md`
-- `rg "publish-dokka-docs|dokkaGenerateHtml|upload-pages-artifact" .github/workflows/main.yml specs/ipc/PROP-002.md`
+- `rg "checks: write|publish-test-results|GITHUB_REF_NAME#v|libVersion|dokkaGenerateHtml" .github/workflows/*.yml specs/ipc/PROP-002.md`

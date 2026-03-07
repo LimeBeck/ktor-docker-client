@@ -1,18 +1,22 @@
-name: CI
+name: Release CI
 
 on:
   push:
-    branches:
-      - "master"
     tags:
       - "v*"
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Resolve release version from tag
+        run: echo "LIB_VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
 
       - name: Set up JDK
         uses: actions/setup-java@v4
@@ -32,7 +36,7 @@ jobs:
             ${{ runner.os }}-gradle
 
       - name: Build with Gradle
-        run: ./gradlew build
+        run: ./gradlew build -PlibVersion=$LIB_VERSION
 
       - name: Publish libs as artifacts
         uses: actions/upload-artifact@v4
@@ -45,6 +49,9 @@ jobs:
     needs: build
     steps:
       - uses: actions/checkout@v4
+
+      - name: Resolve release version from tag
+        run: echo "LIB_VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
 
       - name: Set up JDK
         uses: actions/setup-java@v4
@@ -64,7 +71,7 @@ jobs:
             ${{ runner.os }}-gradle
 
       - name: Run tests with Gradle
-        run: ./gradlew :lib:allTests
+        run: ./gradlew :lib:allTests -PlibVersion=$LIB_VERSION
 
       - name: Upload Unit Test Results
         if: always()
@@ -79,6 +86,9 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - uses: actions/checkout@v4
+
+      - name: Resolve release version from tag
+        run: echo "LIB_VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
 
       - name: Set up JDK
         uses: actions/setup-java@v4
@@ -106,6 +116,7 @@ jobs:
       - name: Publish to Maven Central
         run: |
           ./gradlew :lib:publishAndReleaseToMavenCentral \
+            -PlibVersion=$LIB_VERSION \
             -Psigning.secretKeyRingFile=$GITHUB_WORKSPACE/release.gpg \
             -Psigning.password=${{ secrets.GPG_PASSWORD }} \
             -Psigning.keyId=${{ secrets.GPG_KEY_ID }} \
@@ -120,6 +131,9 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     if: always()
+    permissions:
+      checks: write
+      contents: read
     steps:
       - name: Download Artifacts
         uses: actions/download-artifact@v5
@@ -130,48 +144,3 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v2.20.0
         with:
           files: artifacts/**/*.xml
-
-  publish-dokka-docs:
-    name: Publish Dokka Docs
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
-    concurrency: docs-${{ github.ref }}
-    environment: github-pages
-    permissions:
-      pages: write
-      id-token: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: "temurin"
-          java-version: "21"
-
-      - uses: actions/cache@v4
-        with:
-          path: |
-            ./.gradle/
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-            ~/.konan/
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle
-
-      - name: Build Dokka with Gradle
-        run: ./gradlew :lib:dokkaGenerateHtml
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload Dokka Artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./lib/build/dokka/html
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
