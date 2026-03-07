@@ -6,6 +6,7 @@ Base URI namespace:
 ## Core specs {#core}
 - [`PROP-000.md`](./PROP-000.md) — foundational architecture and invariants.
 - [`PROP-001.md`](./PROP-001.md) — current API surface and behavioral contracts.
+- [`PROP-002.md`](./PROP-002.md) — CI/CD release pipeline contract.
 - [`FEAT-001.md`](./FEAT-001.md) — initial expansion roadmap for missing Docker domains.
 
 ## Usage rule {#usage}

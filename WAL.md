@@ -1,30 +1,32 @@
 # WAL (Write-Ahead Log)
 
 ## Current Focus
-- Bootstrap primary project specs based on existing implementation and establish spec index under `specs/ipc/`.
+- Extend CI/CD contract with Dokka documentation publication.
 
 ## Completed in Last Session
-- Added initial spec set:
-  - `specs/ipc/README.md` (index and URI namespace)
-  - `specs/ipc/PROP-000.md` (foundational invariants and architecture)
-  - `specs/ipc/PROP-001.md` (implemented API surface contracts)
-  - `specs/ipc/FEAT-001.md` (expansion roadmap for missing domains)
-- Preserved repository protocol files (`BOOT.md`, `INSTRUCTIONS.md`, `AGENTS.md`, `CLAUDE.md`) as control plane.
+- Extended `.github/workflows/main.yml` with Dokka docs deployment job:
+  - added `push.branches: master` trigger for CI/docs flow
+  - added `publish-dokka-docs` job (`:lib:dokkaGenerateHtml`)
+  - publishes `./lib/build/dokka/html` to GitHub Pages via official pages actions
+- Updated CI/CD spec `specs/ipc/PROP-002.md` with docs publication anchors:
+  - `#triggers` includes docs branch trigger
+  - added `#docs` section for GitHub Pages Dokka contract
 
 ## Next Steps
-1. Link tests and future PRs to concrete URIs from `specs/ipc/PROP-001.md`.
-2. Split `PROP-001` into per-domain specs when behavior depth increases (containers/images/networks/etc.).
-3. Add lightweight spec-lint script to check URI references and anchor existence.
+1. Add repository secrets required by publish stage (`GPG_SIGNING_KEY`, `SECRET_PASSPHRASE`, `GPG_PASSWORD`, `GPG_KEY_ID`, `OSSRH_USERNAME`, `OSSRH_PASSWORD`).
+2. Enable GitHub Pages for repository and validate first docs deployment from `master`.
+3. Validate workflow on dry-run tag and verify Maven Central publish gate still runs only on `v*` tags.
 
 ## Known Risks / Constraints
-- Specs are foundational and may still be broader than exact per-method semantics.
-- No automated URI/anchor validation in CI yet.
+- `:lib:allTests` includes JS/Native/JVM test execution and can increase runtime on GitHub runners.
+- Publish stage expects encrypted/base64 key material format identical to `reveal-kt` flow.
+- Dokka deployment assumes output path `lib/build/dokka/html` from current Dokka task configuration.
 
 ## Decisions Pending
-- Whether to move top-level protocol docs into a dedicated `specs/` control-plane folder in next cleanup.
-- Which missing API domain to prioritize first from `FEAT-001` (Service vs Secret/Config).
+- Keep current trigger scope (`push.tags`, `push.branches: master`, `workflow_dispatch`) or extend with `pull_request` and update `PROP-002#triggers`.
 
 ## Resume Commands
 - `git status --short`
-- `rg "spec://io.github.limebeck.kmp-docker-client" specs/ipc BOOT.md INSTRUCTIONS.md AGENTS.md CLAUDE.md WAL.md`
-- `rg "\{#" specs/ipc/*.md INSTRUCTIONS.md`
+- `cat .github/workflows/main.yml`
+- `cat specs/ipc/PROP-002.md`
+- `rg "publish-dokka-docs|dokkaGenerateHtml|upload-pages-artifact" .github/workflows/main.yml specs/ipc/PROP-002.md`
